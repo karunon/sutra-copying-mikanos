@@ -45,7 +45,7 @@
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"ms-vscode.cpptools"
+		"ms-vscode.cpptools-extension-pack"
 	],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
