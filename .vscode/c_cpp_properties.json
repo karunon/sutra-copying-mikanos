@@ -6,7 +6,7 @@
                 "${workspaceFolder}/**",
                 // "/home/${username}/edk2/**"
                 // ${username} is specified in `remoteUser` of devcontainer.json
-                "/home/vscode/edk2/**"
+                "/home/vscode/edk2/*Pkg/Include/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
