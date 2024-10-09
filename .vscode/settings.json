@@ -3,7 +3,8 @@
     "files.associations": {
         "simplefilesystem.h": "c",
         "blockio.h": "c",
-        "diskio2.h": "c"
+        "diskio2.h": "c",
+        "frame_buffer_config.hpp": "c"
     },
     "C_Cpp.clang_format_path": "/usr/bin/clang-format",
     "C_Cpp.default.cppStandard": "c++17",
