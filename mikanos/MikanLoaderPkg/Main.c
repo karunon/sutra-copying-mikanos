@@ -74,13 +74,18 @@ const CHAR16* GetMemoryTypeUnicode(EFI_MEMORY_TYPE type) {
 
 // メモリーマップを保存
 EFI_STATUS SaveMemoryMap(struct MemoryMap* map, EFI_FILE_PROTOCOL* file) {
+  // TODO: ここする！！！
+  EFI_STATUS status;
   CHAR8 buf[256];
   UINTN len;
 
   CHAR8* header =
       "Index, Type, Type(name), PhysicalStart, NumberOfPages, Attribute\n";
   len = AsciiStrLen(header);
-  file->Write(file, &len, header);
+  status = file->Write(file, &len, header);
+  if (EFI_ERROR(status)) {
+    return status;
+  }
 
   Print(L"map->buffer = %081x, map->map_size = %081x\n", map->buffer,
         map->map_size);
@@ -95,36 +100,55 @@ EFI_STATUS SaveMemoryMap(struct MemoryMap* map, EFI_FILE_PROTOCOL* file) {
                       desc->Type, GetMemoryTypeUnicode(desc->Type),
                       desc->PhysicalStart, desc->NumberOfPages,
                       desc->Attribute & 0xffffflu);
-    file->Write(file, &len, buf);
+    status = file->Write(file, &len, buf);
+    if (EFI_ERROR(status)) {
+      return status;
+    }
   }
   return EFI_SUCCESS;
 }
 
 EFI_STATUS OpenRootDir(EFI_HANDLE image_handle, EFI_FILE_PROTOCOL** root) {
+  EFI_STATUS status;
   EFI_LOADED_IMAGE_PROTOCOL* loaded_image;
   EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs;
 
-  gBS->OpenProtocol(image_handle, &gEfiLoadedImageProtocolGuid,
-                    (VOID**)&loaded_image, image_handle, NULL,
-                    EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
-  gBS->OpenProtocol(loaded_image->DeviceHandle,
-                    &gEfiSimpleFileSystemProtocolGuid, (VOID**)&fs,
-                    image_handle, NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
-  fs->OpenVolume(fs, root);
+  status = gBS->OpenProtocol(image_handle, &gEfiLoadedImageProtocolGuid,
+                             (VOID**)&loaded_image, image_handle, NULL,
+                             EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+  if (EFI_ERROR(status)) {
+    return status;
+  }
 
-  return EFI_SUCCESS;
+  status = gBS->OpenProtocol(
+      loaded_image->DeviceHandle, &gEfiSimpleFileSystemProtocolGuid,
+      (VOID**)&fs, image_handle, NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+  if (EFI_ERROR(status)) {
+    return status;
+  }
+
+  return fs->OpenVolume(fs, root);
 }
 
 // GOP(Graphics output Protocol)を取得
 EFI_STATUS OpenGOP(EFI_HANDLE image_handle,
                    EFI_GRAPHICS_OUTPUT_PROTOCOL** gop) {
+  EFI_STATUS status;
   UINTN num_gop_handles = 0;
   EFI_HANDLE* gop_handles = NULL;
-  gBS->LocateHandleBuffer(ByProtocol, &gEfiGraphicsOutputProtocolGuid, NULL,
-                          &num_gop_handles, &gop_handles);
-  gBS->OpenProtocol(gop_handles[0], &gEfiGraphicsOutputProtocolGuid,
-                    (VOID**)gop, image_handle, NULL,
-                    EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+
+  status = gBS->LocateHandleBuffer(ByProtocol, &gEfiGraphicsOutputProtocolGuid,
+                                   NULL, &num_gop_handles, &gop_handles);
+  if (EFI_ERROR(status)) {
+    return status;
+  }
+
+  status = gBS->OpenProtocol(gop_handles[0], &gEfiGraphicsOutputProtocolGuid,
+                             (VOID**)gop, image_handle, NULL,
+                             EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+  if (EFI_ERROR(status)) {
+    return status;
+  }
 
   FreePool(gop_handles);
 
